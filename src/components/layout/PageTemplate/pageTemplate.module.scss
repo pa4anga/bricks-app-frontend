@@ -1,0 +1,22 @@
+@use 'variables' as vars;
+
+.root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main {
+  flex: 1 0 auto;
+}
+
+.content {
+  @include vars.container;
+
+  padding-block: vars.$spacing-lg (vars.$spacing-lg * 2);
+}
+
+.heading {
+  margin-bottom: vars.$spacing-lg;
+  color: vars.$color-heading;
+}

@@ -1,0 +1,19 @@
+@use 'variables' as vars;
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: vars.$spacing-sm;
+}
+
+.label {
+  color: vars.$color-text;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.value {
+  color: vars.$color-heading;
+  font-weight: 700;
+  line-height: 1.1;
+}

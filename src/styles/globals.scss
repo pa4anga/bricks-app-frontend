@@ -1,0 +1,38 @@
+@use 'variables' as *;
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  color: $color-text;
+  font-family:
+    'Noto Sans',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+@page {
+  size: a4;
+  margin: 16mm;
+}
+
+@media print {
+  /* stylelint-disable-next-line selector-id-pattern */
+  html.offerPrintActive #__next {
+    display: none;
+  }
+}

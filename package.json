@@ -1,0 +1,88 @@
+{
+  "name": "frontend",
+  "version": "1.0.0",
+  "description": "React + MUI (Next.js Pages Router) app with SWR hooks and an OpenAPI-generated API client",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "lint:fix": "next lint --fix",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "stylelint": "stylelint \"src/**/*.scss\"",
+    "stylelint:fix": "stylelint \"src/**/*.scss\" --fix",
+    "test": "TZ=UTC vitest run",
+    "test:watch": "TZ=UTC vitest",
+    "test:coverage": "TZ=UTC vitest run --coverage",
+    "gen": "orval --config ./orval.config.ts",
+    "gen:watch": "orval --config ./orval.config.ts --watch",
+    "prepare": "husky || true"
+  },
+  "dependencies": {
+    "@consenti/ui": "0.4.0",
+    "@emotion/cache": "^11.14.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/server": "^11.11.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/icons-material": "^6.4.0",
+    "@mui/material": "^6.4.0",
+    "@mui/material-nextjs": "^6.4.0",
+    "axios": "^1.7.9",
+    "next": "15.2.6",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "swr": "^2.3.0",
+    "zod": "^4.5.4"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.1.0",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/coverage-v8": "^2.1.8",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "15.2.6",
+    "eslint-config-prettier": "^9.1.0",
+    "husky": "^9.1.7",
+    "jsdom": "^25.0.1",
+    "lint-staged": "^15.2.11",
+    "msw": "^2.7.0",
+    "orval": "^7.5.0",
+    "prettier": "^3.4.2",
+    "sass": "^1.83.0",
+    "stylelint": "^16.12.0",
+    "stylelint-config-standard-scss": "^14.0.0",
+    "typescript": "5.7.3",
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^2.1.8"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,mjs,cjs}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.scss": [
+      "stylelint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@11.9.0",
+  "volta": {
+    "node": "22.23.1",
+    "pnpm": "11.9.0"
+  }
+}

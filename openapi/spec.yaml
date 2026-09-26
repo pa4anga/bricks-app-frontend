@@ -1,0 +1,2457 @@
+openapi: 3.0.3
+info:
+  title: Backend API
+  version: 1.0.0
+  description: Internal API supplying product/pricing data (bricks and
+    construction products), transport costs and surcharges, plus dashboard
+    configuration. Session-cookie auth; mutations and account management require
+    authentication.
+servers:
+  - url: http://localhost:8080
+    description: Local / internal (not externally accessible)
+tags:
+  - name: Health
+  - name: Auth
+  - name: Accounts
+  - name: Locations
+  - name: SourceLocations
+  - name: Settlements
+  - name: FeeCategories
+  - name: Images
+  - name: Products
+  - name: Config
+  - name: Consent
+    description: 'Embedded @consenti/api GDPR consent management, mounted at
+      /consenti (configurable via CONSENT_BASE_PATH). Consenti applies its own
+      authentication and is not gated by the app session: the public
+      consent-capture API under /consenti/api/v1/* is anonymous, while the admin
+      dashboard at /consenti and the admin API under /consenti/admin/v1/* sit
+      behind the consenti admin login (Bearer JWT from POST
+      /consenti/admin/v1/auth/login). Only a summary is mirrored here; the
+      complete, versioned schemas are served live by consenti at GET
+      /consenti/api/openapi.json (public) and GET
+      /consenti/api/openapi-admin.json (admin), with Swagger UI at
+      /consenti/api/docs.'
+security:
+  - cookieAuth: []
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: connect.sid
+  responses:
+    BadRequest:
+      description: Invalid request (validation failed)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Authentication required or session expired
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: Not allowed to perform this action
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Conflict:
+      description: Conflict (duplicate or still referenced)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    UnprocessableEntity:
+      description: No delivery route for this product/settlement combination
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ServerError:
+      description: Broken referential data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    PayloadTooLarge:
+      description: Upload exceeds the size limit
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    TooManyRequests:
+      description: Too many login attempts from this client; please retry later
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    Error:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+        field:
+          type: string
+          description: When present, the input field responsible for the error (e.g. the
+            field of a uniqueness conflict).
+    IdResponse:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+    NameResponse:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+    CountResponse:
+      type: object
+      required:
+        - total
+      properties:
+        total:
+          type: integer
+          minimum: 0
+    Point:
+      type: object
+      required:
+        - type
+        - coordinates
+      properties:
+        type:
+          type: string
+          enum:
+            - Point
+        coordinates:
+          type: array
+          items:
+            type: number
+          minItems: 2
+          maxItems: 2
+          description: '[longitude, latitude]'
+    Price:
+      type: object
+      required:
+        - source
+        - price
+      properties:
+        source:
+          type: string
+          description: Must match a registered source-location name
+        price:
+          type: number
+          minimum: 0
+    Distance:
+      type: object
+      required:
+        - source
+        - nearestLocation
+        - distanceKm
+      properties:
+        source:
+          type: string
+        nearestLocation:
+          type: string
+          description: '"unavailable" when no location serves this source'
+        distanceKm:
+          type: number
+          description: -1 when unavailable
+    Location:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        postcode:
+          type: integer
+        municipality:
+          type: string
+        sapRegion:
+          type: string
+        salesWbRegion:
+          type: string
+        coordinates:
+          $ref: '#/components/schemas/Point'
+        prices:
+          type: array
+          items:
+            $ref: '#/components/schemas/Price'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    LocationInput:
+      type: object
+      required:
+        - name
+        - coordinates
+      description: 'PATCH is a full overwrite: absent optional fields are cleared.'
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        coordinates:
+          $ref: '#/components/schemas/Point'
+        postcode:
+          type: integer
+          minimum: 0
+        municipality:
+          type: string
+        sapRegion:
+          type: string
+        salesWbRegion:
+          type: string
+        prices:
+          type: array
+          items:
+            $ref: '#/components/schemas/Price'
+    LocationsImportResult:
+      type: object
+      required:
+        - created
+        - updated
+        - total
+      properties:
+        created:
+          type: integer
+          minimum: 0
+        updated:
+          type: integer
+          minimum: 0
+        total:
+          type: integer
+          minimum: 0
+    LocationsImportError:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: string
+          description: Per-row validation errors, present when the CSV failed row-level
+            validation
+    Settlement:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        coordinates:
+          $ref: '#/components/schemas/Point'
+        distances:
+          type: array
+          items:
+            $ref: '#/components/schemas/Distance'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    SettlementInput:
+      type: object
+      required:
+        - name
+        - coordinates
+      properties:
+        name:
+          type: string
+        coordinates:
+          $ref: '#/components/schemas/Point'
+    SourceLocation:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        truckCapacityKg:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    SourceLocationInput:
+      type: object
+      required:
+        - name
+        - truckCapacityKg
+      properties:
+        name:
+          type: string
+        truckCapacityKg:
+          type: integer
+          minimum: 1
+    SourceLocationUpdate:
+      type: object
+      required:
+        - truckCapacityKg
+      properties:
+        truckCapacityKg:
+          type: integer
+          minimum: 1
+    FeeCategory:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        percentage:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    FeeCategoryInput:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        percentage:
+          type: number
+          minimum: 0
+    FeeCategoryUpdate:
+      type: object
+      required:
+        - percentage
+      properties:
+        percentage:
+          type: number
+          minimum: 0
+    SystemComponentInputBase:
+      type: object
+      required:
+        - name
+        - kind
+        - palletWeightKg
+        - countPerPallet
+        - minimumOrderUnits
+        - sourceLocation
+        - sapNumber
+        - feeCategory
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        kind:
+          type: string
+          maxLength: 100
+        unitsPerSquareMeter:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+        palletWeightKg:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+        countPerPallet:
+          type: integer
+          minimum: 1
+        minimumOrderUnits:
+          type: integer
+          minimum: 1
+        sourceLocation:
+          type: string
+          maxLength: 100
+          description: Must match a source-location name
+        sapNumber:
+          type: string
+          maxLength: 100
+        feeCategory:
+          type: string
+          maxLength: 100
+          description: Must match an existing fee category
+    SystemComponentInputPiece:
+      allOf:
+        - $ref: '#/components/schemas/SystemComponentInputBase'
+        - type: object
+          required:
+            - priceUnit
+            - rawUnitPrice
+          not:
+            required:
+              - pricePerSquareMeter
+          properties:
+            priceUnit:
+              type: string
+              enum:
+                - бр.
+            rawUnitPrice:
+              type: number
+              minimum: 0
+              exclusiveMinimum: true
+    SystemComponentInputSquareMeter:
+      allOf:
+        - $ref: '#/components/schemas/SystemComponentInputBase'
+        - type: object
+          required:
+            - priceUnit
+            - pricePerSquareMeter
+          not:
+            required:
+              - rawUnitPrice
+          properties:
+            priceUnit:
+              type: string
+              enum:
+                - m2
+            pricePerSquareMeter:
+              type: number
+              minimum: 0
+              exclusiveMinimum: true
+    SystemComponentInput:
+      description: 'Submit exactly one price: rawUnitPrice when priceUnit is "бр.", or
+        pricePerSquareMeter when priceUnit is "m2". The other is derived
+        server-side when unitsPerSquareMeter is present.'
+      oneOf:
+        - $ref: '#/components/schemas/SystemComponentInputPiece'
+        - $ref: '#/components/schemas/SystemComponentInputSquareMeter'
+      discriminator:
+        propertyName: priceUnit
+        mapping:
+          бр.: '#/components/schemas/SystemComponentInputPiece'
+          m2: '#/components/schemas/SystemComponentInputSquareMeter'
+    SystemComponent:
+      type: object
+      description: unitWeightKg and weightPerSquareMeter are derived server-side; the
+        price field not submitted (rawUnitPrice for "m2", pricePerSquareMeter
+        for "бр.") is derived when unitsPerSquareMeter is present.
+      properties:
+        name:
+          type: string
+        kind:
+          type: string
+        priceUnit:
+          type: string
+          enum:
+            - m2
+            - бр.
+        rawUnitPrice:
+          type: number
+        unitsPerSquareMeter:
+          type: number
+        palletWeightKg:
+          type: number
+        countPerPallet:
+          type: integer
+        minimumOrderUnits:
+          type: integer
+        sourceLocation:
+          type: string
+        sapNumber:
+          type: string
+        feeCategory:
+          type: string
+        unitWeightKg:
+          type: number
+        pricePerSquareMeter:
+          type: number
+        weightPerSquareMeter:
+          type: number
+    Product:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        kind:
+          type: string
+        variant:
+          type: string
+        system:
+          type: string
+        subtype:
+          type: string
+        comment:
+          type: string
+        countPerPallet:
+          type: integer
+        minimumOrderUnits:
+          type: integer
+        palletWeightKg:
+          type: number
+        priceUnit:
+          type: string
+          enum:
+            - m2
+            - бр.
+        rawUnitPrice:
+          type: number
+        unitsPerSquareMeter:
+          type: number
+        unitWeightKg:
+          type: number
+        pricePerSquareMeter:
+          type: number
+        weightPerSquareMeter:
+          type: number
+        classification:
+          type: string
+        sourceLocation:
+          type: string
+        sapNumber:
+          type: string
+        feeCategory:
+          type: string
+        rasterSize:
+          type: string
+        iconLoad:
+          type: string
+        productionSource:
+          type: string
+          enum:
+            - Внос
+            - Местно производство
+        systemComponents:
+          type: array
+          items:
+            $ref: '#/components/schemas/SystemComponent'
+        imageId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ProductInputBase:
+      type: object
+      required:
+        - name
+        - kind
+        - variant
+        - system
+        - subtype
+        - countPerPallet
+        - minimumOrderUnits
+        - palletWeightKg
+        - sourceLocation
+        - sapNumber
+        - feeCategory
+        - productionSource
+        - imageId
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        kind:
+          type: string
+          maxLength: 100
+        variant:
+          type: string
+          maxLength: 100
+        system:
+          type: string
+          maxLength: 150
+        subtype:
+          type: string
+          maxLength: 100
+        comment:
+          type: string
+          maxLength: 500
+        countPerPallet:
+          type: integer
+          minimum: 1
+        minimumOrderUnits:
+          type: integer
+          minimum: 1
+        palletWeightKg:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+        unitsPerSquareMeter:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+        classification:
+          type: string
+          maxLength: 100
+        sourceLocation:
+          type: string
+          maxLength: 100
+          description: Must match a source-location name
+        sapNumber:
+          type: string
+          maxLength: 100
+        feeCategory:
+          type: string
+          maxLength: 100
+          description: Must match an existing fee category
+        rasterSize:
+          type: string
+          maxLength: 100
+        iconLoad:
+          type: string
+          maxLength: 100
+        productionSource:
+          type: string
+          enum:
+            - Внос
+            - Местно производство
+        systemComponents:
+          type: array
+          description: Optional; defaults to empty. Same per-field validation as the
+            matching product fields.
+          items:
+            $ref: '#/components/schemas/SystemComponentInput'
+        imageId:
+          type: string
+          description: Must reference an existing, unbound image
+    ProductInputPiece:
+      allOf:
+        - $ref: '#/components/schemas/ProductInputBase'
+        - type: object
+          required:
+            - priceUnit
+            - rawUnitPrice
+          not:
+            required:
+              - pricePerSquareMeter
+          properties:
+            priceUnit:
+              type: string
+              enum:
+                - бр.
+            rawUnitPrice:
+              type: number
+              minimum: 0
+              exclusiveMinimum: true
+    ProductInputSquareMeter:
+      allOf:
+        - $ref: '#/components/schemas/ProductInputBase'
+        - type: object
+          required:
+            - priceUnit
+            - pricePerSquareMeter
+          not:
+            required:
+              - rawUnitPrice
+          properties:
+            priceUnit:
+              type: string
+              enum:
+                - m2
+            pricePerSquareMeter:
+              type: number
+              minimum: 0
+              exclusiveMinimum: true
+    ProductInput:
+      description: 'PATCH is a full overwrite: absent optional fields are cleared.
+        Changing imageId re-binds the image. Submit exactly one price:
+        rawUnitPrice when priceUnit is "бр.", or pricePerSquareMeter when
+        priceUnit is "m2"; the other and unitWeightKg/weightPerSquareMeter are
+        derived server-side and cannot be set.'
+      oneOf:
+        - $ref: '#/components/schemas/ProductInputPiece'
+        - $ref: '#/components/schemas/ProductInputSquareMeter'
+      discriminator:
+        propertyName: priceUnit
+        mapping:
+          бр.: '#/components/schemas/ProductInputPiece'
+          m2: '#/components/schemas/ProductInputSquareMeter'
+    ProductImportSummary:
+      type: object
+      required:
+        - created
+        - updated
+        - total
+      properties:
+        created:
+          type: integer
+          minimum: 0
+        updated:
+          type: integer
+          minimum: 0
+        total:
+          type: integer
+          minimum: 0
+    ProductImportError:
+      type: object
+      required:
+        - message
+        - errors
+      properties:
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: string
+    Credentials:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+    Account:
+      type: object
+      required:
+        - id
+        - username
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+    UsernameResponse:
+      type: object
+      required:
+        - username
+      properties:
+        username:
+          type: string
+    Config:
+      type: object
+      properties:
+        _id:
+          type: string
+        vat:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ConfigUpdate:
+      type: object
+      required:
+        - vat
+      properties:
+        vat:
+          type: number
+          minimum: 0
+    ProductPricing:
+      type: object
+      required:
+        - nearestLocation
+        - distanceKm
+        - systemComponents
+      properties:
+        pricePerUnit:
+          type: number
+          description: Delivered price per unit incl. fee-category markup, transport and
+            VAT (2dp); absent when rawUnitPrice is unavailable (priceUnit "m2"
+            without unitsPerSquareMeter)
+        pricePerSquareMeter:
+          type: number
+          description: Delivered price per m² incl. fee-category markup, transport and VAT
+            (2dp); absent when the item has no unitsPerSquareMeter
+        nearestLocation:
+          type: string
+        distanceKm:
+          type: number
+        systemComponents:
+          type: array
+          items:
+            $ref: '#/components/schemas/ComponentPricing'
+    ComponentPricing:
+      type: object
+      required:
+        - name
+        - nearestLocation
+        - distanceKm
+      properties:
+        name:
+          type: string
+        pricePerUnit:
+          type: number
+        pricePerSquareMeter:
+          type: number
+        nearestLocation:
+          type: string
+        distanceKm:
+          type: number
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Liveness check
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+  /login:
+    post:
+      tags:
+        - Auth
+      summary: Log in (creates a session cookie)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Credentials'
+      responses:
+        '200':
+          description: Logged in; sets session cookie
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /accounts:
+    get:
+      tags:
+        - Accounts
+      summary: List all accounts (password hash excluded)
+      responses:
+        '200':
+          description: Accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Account'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags:
+        - Accounts
+      summary: Create an account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Credentials'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /accounts/me:
+    get:
+      tags:
+        - Accounts
+      summary: Get the currently authenticated account
+      responses:
+        '200':
+          description: Current account username
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsernameResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /accounts/logout:
+    post:
+      tags:
+        - Accounts
+      summary: Log out of the current session (destroys the session and clears the
+        cookie)
+      responses:
+        '200':
+          description: Logged out; clears session cookie
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /accounts/{id}:
+    get:
+      tags:
+        - Accounts
+      summary: Get an account by id (password hash excluded)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ObjectId
+      responses:
+        '200':
+          description: Account
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - Accounts
+      summary: Delete an account (cannot delete your own or the last one)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ObjectId
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /accounts/{id}/reset-login-attempts:
+    post:
+      tags:
+        - Accounts
+      summary: Reset an account's failed login attempts (unlock)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ObjectId
+      responses:
+        '200':
+          description: Login attempts reset
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /locations:
+    get:
+      tags:
+        - Locations
+      summary: List locations
+      security: []
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+          description: Page number (1-based); default 1. Windows the returned array; the
+            response shape is unchanged (a bare array).
+        - name: pageSize
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+          description: Items per page (max 100); default 20. Windows the returned array;
+            the response shape is unchanged (a bare array).
+      responses:
+        '200':
+          description: Locations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Location'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Locations
+      summary: Create a location
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocationInput'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /locations/import:
+    post:
+      tags:
+        - Locations
+      summary: Bulk import locations from CSV (upsert by case-insensitive name;
+        recomputes settlements)
+      description: Accepts the raw locations CSV (same columns as the seed-locations
+        script), converts and validates each row, then upserts by
+        case-insensitive name — updating an existing location as a full
+        overwrite or creating a new one — and triggers a settlement-distance
+        recompute afterwards.
+      requestBody:
+        required: true
+        content:
+          text/csv:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '200':
+          description: Import summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocationsImportResult'
+        '400':
+          description: Malformed CSV, per-row validation errors, unknown price sources, or
+            duplicate names
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocationsImportError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+  /locations/export:
+    get:
+      tags:
+        - Locations
+      summary: Export all locations as CSV (same columns as the import)
+      description: 'Returns every location as a CSV in the import format: fixed
+        columns (City Name, Post code, Municipality, SAP region, Sales WB
+        region), one column per price source, and a trailing Geo "lat,lng"
+        column. Computed fields (settlement distances) and Mongo internals are
+        excluded, so the output can be re-imported via POST /locations/import.'
+      responses:
+        '200':
+          description: CSV file
+          content:
+            text/csv:
+              schema:
+                type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /locations/search:
+    get:
+      tags:
+        - Locations
+      summary: Search locations by name
+      security: []
+      parameters:
+        - name: name
+          in: query
+          required: true
+          schema:
+            type: string
+            maxLength: 100
+          description: Case-insensitive substring match on name
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+          description: Page number (1-based); default 1. Windows the returned array; the
+            response shape is unchanged (a bare array).
+        - name: pageSize
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+          description: Items per page (max 100); default 20. Windows the returned array;
+            the response shape is unchanged (a bare array).
+      responses:
+        '200':
+          description: Matches
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Location'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /locations/count:
+    get:
+      tags:
+        - Locations
+      summary: Count locations by name
+      description: Number of locations matching the same filter as /locations/search.
+        Omit name to count all locations.
+      security: []
+      parameters:
+        - name: name
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 100
+          description: Case-insensitive substring match on name; omit to count all
+            locations.
+      responses:
+        '200':
+          description: Match count
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CountResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /locations/{id}:
+    get:
+      tags:
+        - Locations
+      summary: Get a location
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ObjectId
+      responses:
+        '200':
+          description: Location
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+        - Locations
+      summary: Replace a location (full overwrite)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ObjectId
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocationInput'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    delete:
+      tags:
+        - Locations
+      summary: Delete a location
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ObjectId
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /source-locations:
+    get:
+      tags:
+        - SourceLocations
+      summary: List all source locations
+      responses:
+        '200':
+          description: All source locations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SourceLocation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags:
+        - SourceLocations
+      summary: Create a source location
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SourceLocationInput'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SourceLocation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /source-locations/{name}:
+    get:
+      tags:
+        - SourceLocations
+      summary: Get a source location by name
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Source location
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SourceLocation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+        - SourceLocations
+      summary: Update a source location truck capacity
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SourceLocationUpdate'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SourceLocation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - SourceLocations
+      summary: Delete a source location (blocked while referenced by a price source or
+        a product)
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NameResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /settlements:
+    get:
+      tags:
+        - Settlements
+      summary: List all settlements
+      security: []
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+          description: Page number (1-based); default 1. Windows the returned array; the
+            response shape is unchanged (a bare array).
+        - name: pageSize
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+          description: Items per page (max 100); default 20. Windows the returned array;
+            the response shape is unchanged (a bare array).
+      responses:
+        '200':
+          description: All settlements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Settlement'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Settlements
+      summary: Create a settlement (distances computed on create)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SettlementInput'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Settlement'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /settlements/search:
+    get:
+      tags:
+        - Settlements
+      summary: Search settlements by available source
+      description: Returns settlements that have a distances entry whose source
+        matches the query and is available (distanceKm != -1).
+      security: []
+      parameters:
+        - name: source
+          in: query
+          required: true
+          schema:
+            type: string
+            maxLength: 100
+          description: Source-location name; matches settlements with an available
+            (routable) distances entry for this source
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+          description: Page number (1-based); default 1. Windows the returned array; the
+            response shape is unchanged (a bare array).
+        - name: pageSize
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+          description: Items per page (max 100); default 20. Windows the returned array;
+            the response shape is unchanged (a bare array).
+      responses:
+        '200':
+          description: Matches
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Settlement'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /settlements/count:
+    get:
+      tags:
+        - Settlements
+      summary: Count settlements by available source
+      description: Number of settlements matching the same filter as
+        /settlements/search. Omit source to count all settlements.
+      security: []
+      parameters:
+        - name: source
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 100
+          description: Source-location name; omit to count all settlements. When set,
+            matches the same filter as /settlements/search.
+      responses:
+        '200':
+          description: Match count
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CountResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /settlements/{name}:
+    get:
+      tags:
+        - Settlements
+      summary: Get settlements by name
+      security: []
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Matches
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Settlement'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /settlements/{id}:
+    patch:
+      tags:
+        - Settlements
+      summary: Replace a settlement (full overwrite; distances recomputed)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ObjectId
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SettlementInput'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Settlement'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    delete:
+      tags:
+        - Settlements
+      summary: Delete a settlement
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ObjectId
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /fee-categories:
+    get:
+      tags:
+        - FeeCategories
+      summary: List all fee categories
+      responses:
+        '200':
+          description: All fee categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FeeCategory'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags:
+        - FeeCategories
+      summary: Create a fee category
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeeCategoryInput'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeeCategory'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /fee-categories/{name}:
+    get:
+      tags:
+        - FeeCategories
+      summary: Get a fee category by name
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Fee category
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeeCategory'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+        - FeeCategories
+      summary: Update a fee category percentage
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeeCategoryUpdate'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeeCategory'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - FeeCategories
+      summary: Delete a fee category (blocked while referenced by a product)
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NameResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /images:
+    post:
+      tags:
+        - Images
+      summary: Upload an image (raw binary body, <=50MB; compressed to WebP <=1200px)
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '201':
+          description: Stored
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+  /images/{id}:
+    get:
+      tags:
+        - Images
+      summary: Serve an image as WebP
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ObjectId
+      responses:
+        '200':
+          description: WebP image
+          content:
+            image/webp:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /products:
+    get:
+      tags:
+        - Products
+      summary: List products
+      security: []
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+          description: Page number (1-based); default 1. Windows the returned array; the
+            response shape is unchanged (a bare array).
+        - name: pageSize
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+          description: Items per page (max 100); default 20. Windows the returned array;
+            the response shape is unchanged (a bare array).
+      responses:
+        '200':
+          description: Products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Products
+      summary: Create a product (binds the image)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductInput'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /products/import:
+    post:
+      tags:
+        - Products
+      summary: Bulk import products from CSV (upsert by sapNumber)
+      description: Accepts a text/csv body. Rows are grouped by (system, variant); the
+        mainComponent="yes" row is the product and mainComponent="no" rows are
+        its systemComponents. Each group is matched to an existing product by
+        sapNumber and fully overwritten, or created if none matches. All rows
+        are validated before any write; the import runs in a single
+        all-or-nothing transaction. Numeric columns use "." as the decimal
+        separator; the body is UTF-8 (a leading BOM is allowed).
+      requestBody:
+        required: true
+        content:
+          text/csv:
+            schema:
+              type: string
+      responses:
+        '200':
+          description: Import summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductImportSummary'
+        '400':
+          description: CSV validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductImportError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+  /products/export:
+    get:
+      tags:
+        - Products
+      summary: Export all products as CSV (same columns as the import)
+      description: 'Returns every product as a CSV in the import format: one
+        mainComponent="yes" row per product followed by a mainComponent="no" row
+        per systemComponent, sharing the parent (system, variant). Each row
+        carries priceUnit and only its native price (rawUnitPrice for "бр.",
+        pricePerSquareMeter for "m2"); the server-derived price of the other
+        unit, plus unitWeightKg/weightPerSquareMeter and Mongo internals, are
+        excluded, so the output can be re-imported via POST /products/import.'
+      responses:
+        '200':
+          description: CSV file
+          content:
+            text/csv:
+              schema:
+                type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /products/search:
+    get:
+      tags:
+        - Products
+      summary: Search/filter products by name, kind, and/or subtype (all optional,
+        combined with AND)
+      security: []
+      parameters:
+        - name: name
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 100
+          description: Case-insensitive substring match on name
+        - name: kind
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 100
+          description: Exact match on product kind
+        - name: subtype
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 100
+          description: Exact match on product subtype
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+          description: Page number (1-based); default 1. Windows the returned array; the
+            response shape is unchanged (a bare array).
+        - name: pageSize
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+          description: Items per page (max 100); default 20. Windows the returned array;
+            the response shape is unchanged (a bare array).
+      responses:
+        '200':
+          description: Matches
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /products/count:
+    get:
+      tags:
+        - Products
+      summary: Count products by name, kind, and/or subtype
+      description: Number of products matching the same filter as /products/search.
+      security: []
+      parameters:
+        - name: name
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 100
+          description: Case-insensitive substring match on name
+        - name: kind
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 100
+          description: Exact match on product kind
+        - name: subtype
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 100
+          description: Exact match on product subtype
+      responses:
+        '200':
+          description: Match count
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CountResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /products/{id}:
+    get:
+      tags:
+        - Products
+      summary: Get a product
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ObjectId
+      responses:
+        '200':
+          description: Product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+        - Products
+      summary: Replace a product (full overwrite; re-binds image if imageId changes)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ObjectId
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductInput'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    delete:
+      tags:
+        - Products
+      summary: Delete a product (cascades its image)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ObjectId
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /products/{id}/price:
+    get:
+      tags:
+        - Products
+      summary: Quote the delivered price of a product to a settlement
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ObjectId
+        - name: settlement
+          in: query
+          required: true
+          schema:
+            type: string
+            maxLength: 100
+          description: Settlement name
+      responses:
+        '200':
+          description: Delivered pricing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductPricing'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /config:
+    get:
+      tags:
+        - Config
+      summary: Get the configuration (created with defaults on first access)
+      responses:
+        '200':
+          description: Configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Config'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    patch:
+      tags:
+        - Config
+      summary: Update the configuration (created if absent)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigUpdate'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Config'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /consenti/api/openapi.json:
+    get:
+      tags:
+        - Consent
+      summary: Consenti public consent-capture API OpenAPI document
+      security: []
+      responses:
+        '200':
+          description: OpenAPI 3 document
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /consenti/api/openapi-admin.json:
+    get:
+      tags:
+        - Consent
+      summary: Consenti admin API OpenAPI document
+      security: []
+      responses:
+        '200':
+          description: OpenAPI 3 document
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /consenti/api/docs:
+    get:
+      tags:
+        - Consent
+      summary: Consenti Swagger UI
+      security: []
+      responses:
+        '200':
+          description: Swagger UI (HTML)
+          content:
+            text/html:
+              schema:
+                type: string
+  /consenti/api/v1/resolve-profile:
+    get:
+      tags:
+        - Consent
+      summary: Geo-resolve the compliance group for a visitor
+      description: Public. Returns the profile file path + locale (for compliance.type
+        "auto").
+      security: []
+      parameters:
+        - name: data
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Base64-encoded GeoHints
+      responses:
+        '200':
+          description: Resolved profile reference
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /consenti/api/v1/profiles/auto/{locale}:
+    get:
+      tags:
+        - Consent
+      summary: 'Legacy: geo-resolve then return the matching active profile'
+      security: []
+      parameters:
+        - name: locale
+          in: path
+          required: true
+          schema:
+            type: string
+          description: BCP-47 locale, e.g. en or fr-FR
+      responses:
+        '200':
+          description: Profile content
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /consenti/api/v1/profiles/{id}:
+    get:
+      tags:
+        - Consent
+      summary: Get a profile by id (default tenant + default locale)
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Profile id
+      responses:
+        '200':
+          description: Profile content
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /consenti/api/v1/profiles/{id}/{locale}:
+    get:
+      tags:
+        - Consent
+      summary: Get a profile by id and locale (default tenant)
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Profile id
+        - name: locale
+          in: path
+          required: true
+          schema:
+            type: string
+          description: BCP-47 locale, e.g. en or fr-FR
+      responses:
+        '200':
+          description: Profile content
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /consenti/api/v1/profiles/{tenantId}/{complianceGroup}/{locale}:
+    get:
+      tags:
+        - Consent
+      summary: Hot-serve a profile locale JSON straight from disk (no DB)
+      security: []
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: complianceGroup
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: locale
+          in: path
+          required: true
+          schema:
+            type: string
+          description: BCP-47 locale, e.g. en or fr-FR
+      responses:
+        '200':
+          description: Profile locale content
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '303':
+          description: Requested locale absent; redirect to the default locale
+  /consenti/api/v1/profiles/{tenantId}/{profileId}/{version}/{locale}:
+    get:
+      tags:
+        - Consent
+      summary: Serve a specific profile version locale JSON (dashboard preview)
+      security: []
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: profileId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: version
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: locale
+          in: path
+          required: true
+          schema:
+            type: string
+          description: BCP-47 locale, e.g. en or fr-FR
+      responses:
+        '200':
+          description: Profile locale content
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /consenti/api/v1/consent:
+    post:
+      tags:
+        - Consent
+      summary: Submit a consent record
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Consent recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /consenti/api/v1/consent/{visitorId}:
+    get:
+      tags:
+        - Consent
+      summary: Get the current consent for a visitor
+      security: []
+      parameters:
+        - name: visitorId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Consent record
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+        - Consent
+      summary: Update the consent for a visitor
+      security: []
+      parameters:
+        - name: visitorId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Consent updated
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - Consent
+      summary: 'GDPR right-to-erasure: delete all data for a visitor'
+      security: []
+      parameters:
+        - name: visitorId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Visitor data erased
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /consenti/api/v1/consent/{visitorId}/verify:
+    get:
+      tags:
+        - Consent
+      summary: Check whether a visitor consent is still valid
+      security: []
+      parameters:
+        - name: visitorId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Validity result
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /consenti:
+    get:
+      tags:
+        - Consent
+      summary: Consenti admin dashboard (single-page app)
+      description: Served by consenti with its own admin auth; not gated by the app session.
+      security: []
+      responses:
+        '200':
+          description: Dashboard HTML
+          content:
+            text/html:
+              schema:
+                type: string
+  /consenti/admin/v1/auth/login:
+    post:
+      tags:
+        - Consent
+      summary: Obtain a consenti admin Bearer JWT (entry point to the admin API)
+      description: Consenti local admin auth; not gated by the app session. The
+        returned JWT authorizes the rest of /consenti/admin/v1/*, fully
+        specified in GET /consenti/api/openapi-admin.json.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Admin JWT
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Invalid admin credentials

@@ -1,0 +1,26 @@
+@use 'variables' as vars;
+
+.root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: vars.$spacing-md;
+  padding-block: (vars.$spacing-lg * 2);
+  text-align: center;
+}
+
+.code {
+  font-size: 6rem;
+  font-weight: 700;
+  line-height: 1;
+  color: vars.$color-primary;
+}
+
+.title {
+  color: vars.$color-heading;
+}
+
+.description {
+  max-width: 480px;
+  color: vars.$color-text;
+}

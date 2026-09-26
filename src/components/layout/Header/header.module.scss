@@ -1,0 +1,34 @@
+@use 'variables' as vars;
+
+.header {
+  position: relative;
+  height: 60px;
+  background-color: vars.$color-primary;
+}
+
+.logoBox {
+  position: absolute;
+  top: 50%;
+  left: vars.$spacing-md;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  height: auto;
+  padding: 0;
+  background-color: #fff;
+  box-shadow: 2px 2px 5px rgb(0 0 0 / 50%);
+}
+
+.logo {
+  display: block;
+  width: auto;
+  height: 80px;
+}
+
+.menuButton {
+  position: absolute;
+  top: 50%;
+  right: vars.$spacing-md;
+  color: #fff;
+  transform: translateY(-50%);
+}

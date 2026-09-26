@@ -1,0 +1,153 @@
+@use 'variables' as vars;
+
+$logo-reserve: 272px;
+$action-reserve: 152px;
+
+.navbar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding-right: $action-reserve;
+  padding-left: $logo-reserve;
+  overflow-x: clip;
+
+  @media (width <= 480px) {
+    padding-right: vars.$spacing-md;
+    padding-left: vars.$spacing-md;
+  }
+}
+
+.sectionRow {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: vars.$spacing-sm;
+  min-width: 0;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sectionRowHidden {
+  visibility: hidden;
+}
+
+.section {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: stretch;
+}
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 vars.$spacing-md;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover,
+  &[aria-expanded='true'] {
+    background: rgb(255 255 255 / 15%);
+  }
+}
+
+.popper {
+  z-index: 1300;
+}
+
+.dropdown {
+  min-width: 240px;
+  max-height: 80vh;
+  margin-top: 2px;
+  padding-bottom: vars.$spacing-sm;
+  overflow-y: auto;
+}
+
+.dropdownGroup {
+  & + & {
+    border-top: 1px solid rgb(0 0 0 / 8%);
+  }
+}
+
+.dropdownSubheading {
+  padding: vars.$spacing-sm vars.$spacing-md 4px;
+  color: vars.$color-primary;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.dropdownItem {
+  color: vars.$color-text;
+  font-size: 0.9rem;
+}
+
+.actions {
+  position: absolute;
+  top: 50%;
+  right: vars.$spacing-md;
+  display: flex;
+  align-items: center;
+  transform: translateY(-50%);
+}
+
+.hamburger {
+  color: #fff;
+}
+
+.logout {
+  white-space: nowrap;
+}
+
+.drawer {
+  display: flex;
+  flex-direction: column;
+  min-width: 280px;
+  min-height: 100%;
+}
+
+.drawerList {
+  flex: 1 1 auto;
+}
+
+.drawerFooter {
+  padding: vars.$spacing-md;
+}
+
+.drawerGroup {
+  color: vars.$color-primary;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 2.2;
+}
+
+.drawerTopLink {
+  color: vars.$color-primary;
+  font-weight: 700;
+}
+
+.drawerSubheading {
+  padding-left: vars.$spacing-md;
+  color: vars.$color-heading;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 2;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.drawerItem {
+  padding-left: vars.$spacing-lg;
+  color: vars.$color-text;
+}

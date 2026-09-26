@@ -1,0 +1,67 @@
+.sheet {
+  display: none;
+}
+
+@media print {
+  .sheet {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    color: #1a1a1a;
+    font-family: 'Noto Sans', sans-serif;
+    font-size: 11pt;
+    line-height: 1.4;
+  }
+
+  .logoRow {
+    margin-bottom: 8pt;
+  }
+
+  .logo {
+    width: auto;
+    height: 30pt;
+  }
+
+  .rule {
+    margin: 10pt 0;
+    border: 0;
+    border-top: 1px solid #cfcfcf;
+  }
+
+  .title {
+    margin: 0 0 10pt;
+    font-size: 20pt;
+    font-weight: 700;
+  }
+
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .th {
+    padding: 4pt 6pt;
+    font-size: 11pt;
+    font-weight: 700;
+    text-align: left;
+    border-bottom: 1px solid #999;
+  }
+
+  .groupCell {
+    padding: 4pt 6pt;
+    font-weight: 600;
+    background-color: #ececec;
+    border-bottom: 1px solid #cfcfcf;
+  }
+
+  .cell {
+    padding: 4pt 6pt;
+    font-size: 10.5pt;
+    border-bottom: 1px solid #e5e5e5;
+  }
+
+  .priceCol {
+    text-align: right;
+    white-space: nowrap;
+  }
+}

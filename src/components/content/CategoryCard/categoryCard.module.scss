@@ -1,0 +1,61 @@
+@use 'variables' as vars;
+
+.card {
+  flex-shrink: 0;
+  height: 100%;
+  width: auto;
+  aspect-ratio: 10 / 10;
+  overflow: hidden;
+
+  @media (max-width: vars.$breakpoint-cards) {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 7 / 3;
+  }
+}
+
+.media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  background-color: #fff;
+  transition: transform 0.4s ease;
+}
+
+.actionArea {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+
+  &:hover .media,
+  &:focus-visible .media {
+    transform: scale(1.04);
+  }
+}
+
+.caption {
+  position: absolute;
+  inset: auto 0 0;
+  width: 100%;
+  padding: vars.$spacing-md vars.$spacing-lg;
+}
+
+.caption::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgb(0 0 0 / 30%);
+  backdrop-filter: blur(9px);
+  pointer-events: none;
+}
+
+.title {
+  position: relative;
+  color: #fff;
+  font-weight: 700;
+  text-shadow: 0 1px 3px rgb(0 0 0 / 45%);
+}

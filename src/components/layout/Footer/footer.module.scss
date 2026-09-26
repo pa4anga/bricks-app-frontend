@@ -1,0 +1,47 @@
+@use 'variables' as vars;
+
+.footer {
+  background-color: vars.$color-surface;
+  padding-block: vars.$spacing-md;
+}
+
+.footerCollapsed {
+  padding-block: 0;
+  background-color: transparent;
+}
+
+.inner {
+  @include vars.container;
+}
+
+.list {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: vars.$spacing-md;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow: hidden;
+}
+
+.item {
+  margin: 0;
+}
+
+.link {
+  color: vars.$color-primary;
+  font-size: 0.9rem;
+  text-decoration: none;
+  white-space: nowrap;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.collapsed {
+  visibility: hidden;
+  height: 0;
+}
