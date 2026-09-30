@@ -1,0 +1,407 @@
+{
+  "version": 3,
+  "pages404": true,
+  "caseSensitive": false,
+  "basePath": "",
+  "redirects": [
+    {
+      "source": "/:path+/",
+      "destination": "/:path+",
+      "internal": true,
+      "statusCode": 308,
+      "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$"
+    }
+  ],
+  "headers": [],
+  "dynamicRoutes": [
+    {
+      "page": "/internal/fee-categories/[name]/edit",
+      "regex": "^/internal/fee\\-categories/([^/]+?)/edit(?:/)?$",
+      "routeKeys": {
+        "nxtPname": "nxtPname"
+      },
+      "namedRegex": "^/internal/fee\\-categories/(?<nxtPname>[^/]+?)/edit(?:/)?$"
+    },
+    {
+      "page": "/internal/locations/[id]/edit",
+      "regex": "^/internal/locations/([^/]+?)/edit(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/internal/locations/(?<nxtPid>[^/]+?)/edit(?:/)?$"
+    },
+    {
+      "page": "/internal/products/[id]",
+      "regex": "^/internal/products/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/internal/products/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/internal/products/[id]/edit",
+      "regex": "^/internal/products/([^/]+?)/edit(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/internal/products/(?<nxtPid>[^/]+?)/edit(?:/)?$"
+    },
+    {
+      "page": "/internal/settlements/[name]/edit",
+      "regex": "^/internal/settlements/([^/]+?)/edit(?:/)?$",
+      "routeKeys": {
+        "nxtPname": "nxtPname"
+      },
+      "namedRegex": "^/internal/settlements/(?<nxtPname>[^/]+?)/edit(?:/)?$"
+    },
+    {
+      "page": "/internal/source-locations/[name]/edit",
+      "regex": "^/internal/source\\-locations/([^/]+?)/edit(?:/)?$",
+      "routeKeys": {
+        "nxtPname": "nxtPname"
+      },
+      "namedRegex": "^/internal/source\\-locations/(?<nxtPname>[^/]+?)/edit(?:/)?$"
+    }
+  ],
+  "staticRoutes": [
+    {
+      "page": "/",
+      "regex": "^/(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/(?:/)?$"
+    },
+    {
+      "page": "/403",
+      "regex": "^/403(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/403(?:/)?$"
+    },
+    {
+      "page": "/404",
+      "regex": "^/404(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/404(?:/)?$"
+    },
+    {
+      "page": "/500",
+      "regex": "^/500(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/500(?:/)?$"
+    },
+    {
+      "page": "/cookies",
+      "regex": "^/cookies(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/cookies(?:/)?$"
+    },
+    {
+      "page": "/impresum",
+      "regex": "^/impresum(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/impresum(?:/)?$"
+    },
+    {
+      "page": "/internal/accounts",
+      "regex": "^/internal/accounts(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/internal/accounts(?:/)?$"
+    },
+    {
+      "page": "/internal/accounts/new",
+      "regex": "^/internal/accounts/new(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/internal/accounts/new(?:/)?$"
+    },
+    {
+      "page": "/internal/config",
+      "regex": "^/internal/config(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/internal/config(?:/)?$"
+    },
+    {
+      "page": "/internal/dashboard",
+      "regex": "^/internal/dashboard(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/internal/dashboard(?:/)?$"
+    },
+    {
+      "page": "/internal/data",
+      "regex": "^/internal/data(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/internal/data(?:/)?$"
+    },
+    {
+      "page": "/internal/fee-categories",
+      "regex": "^/internal/fee\\-categories(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/internal/fee\\-categories(?:/)?$"
+    },
+    {
+      "page": "/internal/fee-categories/new",
+      "regex": "^/internal/fee\\-categories/new(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/internal/fee\\-categories/new(?:/)?$"
+    },
+    {
+      "page": "/internal/images/upload",
+      "regex": "^/internal/images/upload(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/internal/images/upload(?:/)?$"
+    },
+    {
+      "page": "/internal/locations",
+      "regex": "^/internal/locations(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/internal/locations(?:/)?$"
+    },
+    {
+      "page": "/internal/locations/new",
+      "regex": "^/internal/locations/new(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/internal/locations/new(?:/)?$"
+    },
+    {
+      "page": "/internal/login",
+      "regex": "^/internal/login(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/internal/login(?:/)?$"
+    },
+    {
+      "page": "/internal/products/bricks",
+      "regex": "^/internal/products/bricks(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/internal/products/bricks(?:/)?$"
+    },
+    {
+      "page": "/internal/products/bricks/new",
+      "regex": "^/internal/products/bricks/new(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/internal/products/bricks/new(?:/)?$"
+    },
+    {
+      "page": "/internal/products/pavements",
+      "regex": "^/internal/products/pavements(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/internal/products/pavements(?:/)?$"
+    },
+    {
+      "page": "/internal/products/pavements/new",
+      "regex": "^/internal/products/pavements/new(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/internal/products/pavements/new(?:/)?$"
+    },
+    {
+      "page": "/internal/products/roofs",
+      "regex": "^/internal/products/roofs(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/internal/products/roofs(?:/)?$"
+    },
+    {
+      "page": "/internal/products/roofs/new",
+      "regex": "^/internal/products/roofs/new(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/internal/products/roofs/new(?:/)?$"
+    },
+    {
+      "page": "/internal/settlements",
+      "regex": "^/internal/settlements(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/internal/settlements(?:/)?$"
+    },
+    {
+      "page": "/internal/settlements/new",
+      "regex": "^/internal/settlements/new(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/internal/settlements/new(?:/)?$"
+    },
+    {
+      "page": "/internal/source-locations",
+      "regex": "^/internal/source\\-locations(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/internal/source\\-locations(?:/)?$"
+    },
+    {
+      "page": "/internal/source-locations/new",
+      "regex": "^/internal/source\\-locations/new(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/internal/source\\-locations/new(?:/)?$"
+    },
+    {
+      "page": "/prices/bricks",
+      "regex": "^/prices/bricks(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/prices/bricks(?:/)?$"
+    },
+    {
+      "page": "/prices/pavement",
+      "regex": "^/prices/pavement(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/prices/pavement(?:/)?$"
+    },
+    {
+      "page": "/prices/roof-tiles",
+      "regex": "^/prices/roof\\-tiles(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/prices/roof\\-tiles(?:/)?$"
+    },
+    {
+      "page": "/prices/system-components",
+      "regex": "^/prices/system\\-components(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/prices/system\\-components(?:/)?$"
+    },
+    {
+      "page": "/terms",
+      "regex": "^/terms(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/terms(?:/)?$"
+    }
+  ],
+  "dataRoutes": [
+    {
+      "page": "/internal/accounts",
+      "dataRouteRegex": "^/_next/data/MxMAja9S8wISwDTTCLG\\-0/internal/accounts\\.json$"
+    },
+    {
+      "page": "/internal/accounts/new",
+      "dataRouteRegex": "^/_next/data/MxMAja9S8wISwDTTCLG\\-0/internal/accounts/new\\.json$"
+    },
+    {
+      "page": "/internal/config",
+      "dataRouteRegex": "^/_next/data/MxMAja9S8wISwDTTCLG\\-0/internal/config\\.json$"
+    },
+    {
+      "page": "/internal/dashboard",
+      "dataRouteRegex": "^/_next/data/MxMAja9S8wISwDTTCLG\\-0/internal/dashboard\\.json$"
+    },
+    {
+      "page": "/internal/data",
+      "dataRouteRegex": "^/_next/data/MxMAja9S8wISwDTTCLG\\-0/internal/data\\.json$"
+    },
+    {
+      "page": "/internal/fee-categories",
+      "dataRouteRegex": "^/_next/data/MxMAja9S8wISwDTTCLG\\-0/internal/fee-categories\\.json$"
+    },
+    {
+      "page": "/internal/fee-categories/new",
+      "dataRouteRegex": "^/_next/data/MxMAja9S8wISwDTTCLG\\-0/internal/fee-categories/new\\.json$"
+    },
+    {
+      "page": "/internal/fee-categories/[name]/edit",
+      "routeKeys": {
+        "nxtPname": "nxtPname"
+      },
+      "dataRouteRegex": "^/_next/data/MxMAja9S8wISwDTTCLG\\-0/internal/fee\\-categories/([^/]+?)/edit\\.json$",
+      "namedDataRouteRegex": "^/_next/data/MxMAja9S8wISwDTTCLG\\-0/internal/fee\\-categories/(?<nxtPname>[^/]+?)/edit\\.json$"
+    },
+    {
+      "page": "/internal/images/upload",
+      "dataRouteRegex": "^/_next/data/MxMAja9S8wISwDTTCLG\\-0/internal/images/upload\\.json$"
+    },
+    {
+      "page": "/internal/locations",
+      "dataRouteRegex": "^/_next/data/MxMAja9S8wISwDTTCLG\\-0/internal/locations\\.json$"
+    },
+    {
+      "page": "/internal/locations/new",
+      "dataRouteRegex": "^/_next/data/MxMAja9S8wISwDTTCLG\\-0/internal/locations/new\\.json$"
+    },
+    {
+      "page": "/internal/locations/[id]/edit",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "dataRouteRegex": "^/_next/data/MxMAja9S8wISwDTTCLG\\-0/internal/locations/([^/]+?)/edit\\.json$",
+      "namedDataRouteRegex": "^/_next/data/MxMAja9S8wISwDTTCLG\\-0/internal/locations/(?<nxtPid>[^/]+?)/edit\\.json$"
+    },
+    {
+      "page": "/internal/products/bricks",
+      "dataRouteRegex": "^/_next/data/MxMAja9S8wISwDTTCLG\\-0/internal/products/bricks\\.json$"
+    },
+    {
+      "page": "/internal/products/bricks/new",
+      "dataRouteRegex": "^/_next/data/MxMAja9S8wISwDTTCLG\\-0/internal/products/bricks/new\\.json$"
+    },
+    {
+      "page": "/internal/products/pavements",
+      "dataRouteRegex": "^/_next/data/MxMAja9S8wISwDTTCLG\\-0/internal/products/pavements\\.json$"
+    },
+    {
+      "page": "/internal/products/pavements/new",
+      "dataRouteRegex": "^/_next/data/MxMAja9S8wISwDTTCLG\\-0/internal/products/pavements/new\\.json$"
+    },
+    {
+      "page": "/internal/products/roofs",
+      "dataRouteRegex": "^/_next/data/MxMAja9S8wISwDTTCLG\\-0/internal/products/roofs\\.json$"
+    },
+    {
+      "page": "/internal/products/roofs/new",
+      "dataRouteRegex": "^/_next/data/MxMAja9S8wISwDTTCLG\\-0/internal/products/roofs/new\\.json$"
+    },
+    {
+      "page": "/internal/products/[id]",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "dataRouteRegex": "^/_next/data/MxMAja9S8wISwDTTCLG\\-0/internal/products/([^/]+?)\\.json$",
+      "namedDataRouteRegex": "^/_next/data/MxMAja9S8wISwDTTCLG\\-0/internal/products/(?<nxtPid>[^/]+?)\\.json$"
+    },
+    {
+      "page": "/internal/products/[id]/edit",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "dataRouteRegex": "^/_next/data/MxMAja9S8wISwDTTCLG\\-0/internal/products/([^/]+?)/edit\\.json$",
+      "namedDataRouteRegex": "^/_next/data/MxMAja9S8wISwDTTCLG\\-0/internal/products/(?<nxtPid>[^/]+?)/edit\\.json$"
+    },
+    {
+      "page": "/internal/settlements",
+      "dataRouteRegex": "^/_next/data/MxMAja9S8wISwDTTCLG\\-0/internal/settlements\\.json$"
+    },
+    {
+      "page": "/internal/settlements/new",
+      "dataRouteRegex": "^/_next/data/MxMAja9S8wISwDTTCLG\\-0/internal/settlements/new\\.json$"
+    },
+    {
+      "page": "/internal/settlements/[name]/edit",
+      "routeKeys": {
+        "nxtPname": "nxtPname"
+      },
+      "dataRouteRegex": "^/_next/data/MxMAja9S8wISwDTTCLG\\-0/internal/settlements/([^/]+?)/edit\\.json$",
+      "namedDataRouteRegex": "^/_next/data/MxMAja9S8wISwDTTCLG\\-0/internal/settlements/(?<nxtPname>[^/]+?)/edit\\.json$"
+    },
+    {
+      "page": "/internal/source-locations",
+      "dataRouteRegex": "^/_next/data/MxMAja9S8wISwDTTCLG\\-0/internal/source-locations\\.json$"
+    },
+    {
+      "page": "/internal/source-locations/new",
+      "dataRouteRegex": "^/_next/data/MxMAja9S8wISwDTTCLG\\-0/internal/source-locations/new\\.json$"
+    },
+    {
+      "page": "/internal/source-locations/[name]/edit",
+      "routeKeys": {
+        "nxtPname": "nxtPname"
+      },
+      "dataRouteRegex": "^/_next/data/MxMAja9S8wISwDTTCLG\\-0/internal/source\\-locations/([^/]+?)/edit\\.json$",
+      "namedDataRouteRegex": "^/_next/data/MxMAja9S8wISwDTTCLG\\-0/internal/source\\-locations/(?<nxtPname>[^/]+?)/edit\\.json$"
+    }
+  ],
+  "rsc": {
+    "header": "RSC",
+    "varyHeader": "RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch",
+    "prefetchHeader": "Next-Router-Prefetch",
+    "didPostponeHeader": "x-nextjs-postponed",
+    "contentTypeHeader": "text/x-component",
+    "suffix": ".rsc",
+    "prefetchSuffix": ".prefetch.rsc",
+    "prefetchSegmentHeader": "Next-Router-Segment-Prefetch",
+    "prefetchSegmentSuffix": ".segment.rsc",
+    "prefetchSegmentDirSuffix": ".segments"
+  },
+  "rewriteHeaders": {
+    "pathHeader": "x-nextjs-rewritten-path",
+    "queryHeader": "x-nextjs-rewritten-query"
+  },
+  "rewrites": []
+}
