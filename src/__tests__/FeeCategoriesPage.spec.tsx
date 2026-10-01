@@ -97,7 +97,7 @@ describe('fee categories getServerSideProps', () => {
     expect(result).toEqual({ props: {} });
     expect(fetchMock).toHaveBeenCalledWith(
       expect.stringContaining('/accounts/me'),
-      expect.objectContaining({ headers: { cookie: 'connect.sid=abc' } })
+      expect.objectContaining({ headers: { cookie: 'connect.sid=abc', 'x-forwarded-proto': 'https' } })
     );
   });
 

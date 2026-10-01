@@ -14,8 +14,10 @@ type Handler<P extends Record<string, unknown>> = (
 export const withApi =
   <P extends Record<string, unknown>>(handler: Handler<P>): GetServerSideProps<P> =>
   async context => {
+    const baseUrl = process.env.API_INTERNAL_BASE_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
+
     try {
-      return await handler(context, { baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL ?? '' });
+      return await handler(context, { baseUrl });
     } catch {
       return redirect500;
     }

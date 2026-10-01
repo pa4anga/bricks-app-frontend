@@ -27,11 +27,20 @@ export function withAuth<P extends Record<string, unknown>>(
   handler?: AuthenticatedHandler<P>
 ): GetServerSideProps<P> {
   return withApi<P>(async (context, { baseUrl }) => {
+    const cookie = context.req.headers.cookie ?? '';
     const response = await fetch(`${baseUrl}/accounts/me`, {
-      headers: { cookie: context.req.headers.cookie ?? '' },
+      headers: { cookie, 'x-forwarded-proto': 'https' },
     });
 
     if (response.status === 401) {
+      const forwardedCookies = cookie
+        .split(';')
+        .map(part => part.trim().split('=')[0])
+        .filter(Boolean);
+      console.warn(
+        `[ssr-auth] 401 from ${baseUrl}/accounts/me for ${context.resolvedUrl}; forwarded cookies: [${forwardedCookies.join(', ') || 'none'}]`
+      );
+
       const destination = typeof returnTo === 'function' ? returnTo(context) : returnTo;
 
       return {
