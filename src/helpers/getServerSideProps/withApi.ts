@@ -18,7 +18,9 @@ export const withApi =
 
     try {
       return await handler(context, { baseUrl });
-    } catch {
+    } catch (error) {
+      console.error(`[ssr-500] ${context.resolvedUrl} via ${baseUrl}:`, error);
+
       return redirect500;
     }
   };
