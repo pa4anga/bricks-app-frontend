@@ -10,30 +10,11 @@ import { z } from 'zod';
 import { usePostAccounts } from '@/api/endpoints/accounts/accounts';
 import { PageTemplate } from '@/components';
 import { Button, FormSection, ValidatedTextField } from '@/components/form';
-import { INTERNAL_ACCOUNT_CREATE_ROUTE, INTERNAL_ACCOUNTS_ROUTE, INTERNAL_LOGIN_ROUTE } from '@/constants/routes';
+import { INTERNAL_ACCOUNT_CREATE_ROUTE, INTERNAL_ACCOUNTS_ROUTE } from '@/constants/routes';
 import { getConflictField, isConflictError } from '@/helpers/apiErrors';
-import { withApi } from '@/helpers/getServerSideProps/withApi';
+import { withAuth } from '@/helpers/getServerSideProps/withAuth';
 
-export const getServerSideProps = withApi<Record<string, never>>(async (context, { baseUrl }) => {
-  const response = await fetch(`${baseUrl}/accounts/me`, {
-    headers: { cookie: context.req.headers.cookie ?? '' },
-  });
-
-  if (response.status === 401) {
-    return {
-      redirect: {
-        destination: `${INTERNAL_LOGIN_ROUTE}?redirect=${encodeURIComponent(INTERNAL_ACCOUNT_CREATE_ROUTE)}`,
-        permanent: false,
-      },
-    };
-  }
-
-  if (!response.ok) {
-    throw new Error(`Failed to load account (${response.status})`);
-  }
-
-  return { props: {} };
-});
+export const getServerSideProps = withAuth(INTERNAL_ACCOUNT_CREATE_ROUTE);
 
 const PASSWORD_REQUIREMENTS = 'Паролата трябва да е поне 12 символа и да съдържа поне една главна буква и една цифра.';
 

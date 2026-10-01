@@ -4,36 +4,16 @@ import { useGetFeeCategories } from '@/api/endpoints/fee-categories/fee-categori
 import { useGetLocationsCount } from '@/api/endpoints/locations/locations';
 import { useGetProductsCount } from '@/api/endpoints/products/products';
 import { useGetSettlementsCount } from '@/api/endpoints/settlements/settlements';
-import type { UsernameResponse } from '@/api/model';
 import { PageTemplate, StatCard } from '@/components';
 import { BRICK_PRODUCT_KIND, PAVEMENT_PRODUCT_KIND, ROOF_PRODUCT_KIND } from '@/constants/productKinds';
-import { INTERNAL_DASHBOARD_ROUTE, INTERNAL_LOGIN_ROUTE } from '@/constants/routes';
-import { withApi } from '@/helpers/getServerSideProps/withApi';
+import { INTERNAL_DASHBOARD_ROUTE } from '@/constants/routes';
+import { withAuth } from '@/helpers/getServerSideProps/withAuth';
 
 import styles from './dashboard.module.scss';
 
-export const getServerSideProps = withApi<{ username: string }>(async (context, { baseUrl }) => {
-  const response = await fetch(`${baseUrl}/accounts/me`, {
-    headers: { cookie: context.req.headers.cookie ?? '' },
-  });
-
-  if (response.status === 401) {
-    return {
-      redirect: {
-        destination: `${INTERNAL_LOGIN_ROUTE}?redirect=${encodeURIComponent(INTERNAL_DASHBOARD_ROUTE)}`,
-        permanent: false,
-      },
-    };
-  }
-
-  if (!response.ok) {
-    throw new Error(`Failed to load account (${response.status})`);
-  }
-
-  const { username } = (await response.json()) as UsernameResponse;
-
-  return { props: { username } };
-});
+export const getServerSideProps = withAuth(INTERNAL_DASHBOARD_ROUTE, (_context, { username }) => ({
+  props: { username },
+}));
 
 const DashboardPage: NextPage<InferGetServerSidePropsType<typeof getServerSideProps>> = ({ username }) => {
   const products = useGetProductsCount();

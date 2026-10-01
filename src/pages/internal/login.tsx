@@ -5,8 +5,10 @@ import Stack from '@mui/material/Stack';
 import type { NextPage } from 'next';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import { useSWRConfig } from 'swr';
 import { z } from 'zod';
 
+import { getGetAccountsMeKey } from '@/api/endpoints/accounts/accounts';
 import { usePostLogin } from '@/api/endpoints/auth/auth';
 import { PageTemplate } from '@/components';
 import { Button, Form, TextBox } from '@/components/form';
@@ -21,29 +23,34 @@ const schema = z.object({
 
 const LoginPage: NextPage = () => {
   const router = useRouter();
+  const { mutate } = useSWRConfig();
   const { trigger, isMutating } = usePostLogin();
   const { isAuthenticated, isCheckingSession } = useIsAuthenticated();
   const [hasError, setHasError] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !isRedirecting) {
       void router.replace(INTERNAL_DASHBOARD_ROUTE);
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, isRedirecting, router]);
 
   const handleSubmit = async (values: z.infer<typeof schema>) => {
     setHasError(false);
 
     try {
       await trigger(values);
+      setIsRedirecting(true);
+      await mutate(getGetAccountsMeKey()).catch(() => undefined);
       const redirect = getSafeRedirect(router.query.redirect);
       await router.replace(redirect ?? INTERNAL_DASHBOARD_ROUTE);
     } catch {
+      setIsRedirecting(false);
       setHasError(true);
     }
   };
 
-  if (isCheckingSession || isAuthenticated) {
+  if (isCheckingSession || isAuthenticated || isRedirecting) {
     return (
       <PageTemplate title="Вход" heading="Вход" bare>
         <Stack alignItems="center" sx={{ py: 8 }}>

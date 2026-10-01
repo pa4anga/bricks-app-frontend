@@ -10,34 +10,11 @@ import { z } from 'zod';
 import { usePostFeeCategories } from '@/api/endpoints/fee-categories/fee-categories';
 import { PageTemplate } from '@/components';
 import { Button, FormSection, ValidatedTextField } from '@/components/form';
-import {
-  INTERNAL_FEE_CATEGORIES_ROUTE,
-  INTERNAL_FEE_CATEGORY_CREATE_ROUTE,
-  INTERNAL_LOGIN_ROUTE,
-} from '@/constants/routes';
+import { INTERNAL_FEE_CATEGORIES_ROUTE, INTERNAL_FEE_CATEGORY_CREATE_ROUTE } from '@/constants/routes';
 import { getConflictField, isConflictError } from '@/helpers/apiErrors';
-import { withApi } from '@/helpers/getServerSideProps/withApi';
+import { withAuth } from '@/helpers/getServerSideProps/withAuth';
 
-export const getServerSideProps = withApi<Record<string, never>>(async (context, { baseUrl }) => {
-  const response = await fetch(`${baseUrl}/accounts/me`, {
-    headers: { cookie: context.req.headers.cookie ?? '' },
-  });
-
-  if (response.status === 401) {
-    return {
-      redirect: {
-        destination: `${INTERNAL_LOGIN_ROUTE}?redirect=${encodeURIComponent(INTERNAL_FEE_CATEGORY_CREATE_ROUTE)}`,
-        permanent: false,
-      },
-    };
-  }
-
-  if (!response.ok) {
-    throw new Error(`Failed to load account (${response.status})`);
-  }
-
-  return { props: {} };
-});
+export const getServerSideProps = withAuth(INTERNAL_FEE_CATEGORY_CREATE_ROUTE);
 
 const PERCENTAGE_REQUIREMENTS = 'Процентът трябва да е число, поне 0.';
 

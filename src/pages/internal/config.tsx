@@ -10,29 +10,10 @@ import type { FormEvent } from 'react';
 import { useGetConfig, usePatchConfig } from '@/api/endpoints/config/config';
 import { PageTemplate } from '@/components';
 import { Button, FormSection, ValidatedTextField } from '@/components/form';
-import { INTERNAL_CONFIG_ROUTE, INTERNAL_LOGIN_ROUTE } from '@/constants/routes';
-import { withApi } from '@/helpers/getServerSideProps/withApi';
+import { INTERNAL_CONFIG_ROUTE } from '@/constants/routes';
+import { withAuth } from '@/helpers/getServerSideProps/withAuth';
 
-export const getServerSideProps = withApi<Record<string, never>>(async (context, { baseUrl }) => {
-  const response = await fetch(`${baseUrl}/accounts/me`, {
-    headers: { cookie: context.req.headers.cookie ?? '' },
-  });
-
-  if (response.status === 401) {
-    return {
-      redirect: {
-        destination: `${INTERNAL_LOGIN_ROUTE}?redirect=${encodeURIComponent(INTERNAL_CONFIG_ROUTE)}`,
-        permanent: false,
-      },
-    };
-  }
-
-  if (!response.ok) {
-    throw new Error(`Failed to load account (${response.status})`);
-  }
-
-  return { props: {} };
-});
+export const getServerSideProps = withAuth(INTERNAL_CONFIG_ROUTE);
 
 const VAT_INPUT_PATTERN = /^\d*\.?\d*$/;
 const VAT_VALUE_PATTERN = /^(?:\d+(?:\.\d+)?|\.\d+)$/;

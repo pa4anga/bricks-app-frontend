@@ -8,29 +8,10 @@ import { getProductsExport, usePostProductsImport } from '@/api/endpoints/produc
 import { PageTemplate } from '@/components';
 import { CsvExportButton, CsvImportForm } from '@/components/data';
 import type { ICsvImportResult } from '@/components/data';
-import { INTERNAL_DATA_ROUTE, INTERNAL_LOGIN_ROUTE } from '@/constants/routes';
-import { withApi } from '@/helpers/getServerSideProps/withApi';
+import { INTERNAL_DATA_ROUTE } from '@/constants/routes';
+import { withAuth } from '@/helpers/getServerSideProps/withAuth';
 
-export const getServerSideProps = withApi<Record<string, never>>(async (context, { baseUrl }) => {
-  const response = await fetch(`${baseUrl}/accounts/me`, {
-    headers: { cookie: context.req.headers.cookie ?? '' },
-  });
-
-  if (response.status === 401) {
-    return {
-      redirect: {
-        destination: `${INTERNAL_LOGIN_ROUTE}?redirect=${encodeURIComponent(INTERNAL_DATA_ROUTE)}`,
-        permanent: false,
-      },
-    };
-  }
-
-  if (!response.ok) {
-    throw new Error(`Failed to load account (${response.status})`);
-  }
-
-  return { props: {} };
-});
+export const getServerSideProps = withAuth(INTERNAL_DATA_ROUTE);
 
 const WARNING_MESSAGE =
   'Качването и експортирането на данни може да отнеме време. Не затваряйте и не опреснявайте страницата — изчакайте операцията да приключи.';

@@ -7,30 +7,12 @@ import { useRouter } from 'next/router';
 import { useGetProductsId, usePatchProductsId } from '@/api/endpoints/products/products';
 import { PageTemplate, ProductForm, productToFormValues } from '@/components';
 import { getProductKindByKind } from '@/constants/productKinds';
-import { INTERNAL_LOGIN_ROUTE, INTERNAL_PRODUCT_EDIT_ROUTE } from '@/constants/routes';
-import { withApi } from '@/helpers/getServerSideProps/withApi';
+import { INTERNAL_PRODUCT_EDIT_ROUTE } from '@/constants/routes';
+import { withAuth } from '@/helpers/getServerSideProps/withAuth';
 
-export const getServerSideProps = withApi<Record<string, never>>(async (context, { baseUrl }) => {
-  const id = typeof context.params?.id === 'string' ? context.params.id : '';
-  const response = await fetch(`${baseUrl}/accounts/me`, {
-    headers: { cookie: context.req.headers.cookie ?? '' },
-  });
-
-  if (response.status === 401) {
-    return {
-      redirect: {
-        destination: `${INTERNAL_LOGIN_ROUTE}?redirect=${encodeURIComponent(INTERNAL_PRODUCT_EDIT_ROUTE(id))}`,
-        permanent: false,
-      },
-    };
-  }
-
-  if (!response.ok) {
-    throw new Error(`Failed to load account (${response.status})`);
-  }
-
-  return { props: {} };
-});
+export const getServerSideProps = withAuth(context =>
+  INTERNAL_PRODUCT_EDIT_ROUTE(typeof context.params?.id === 'string' ? context.params.id : '')
+);
 
 interface IEditProductContentProps {
   id: string;

@@ -8,29 +8,10 @@ import { useEffect, useState } from 'react';
 
 import { useGetLocations, useGetLocationsCount } from '@/api/endpoints/locations/locations';
 import { LocationsTable, PageTemplate } from '@/components';
-import { INTERNAL_LOCATION_CREATE_ROUTE, INTERNAL_LOCATIONS_ROUTE, INTERNAL_LOGIN_ROUTE } from '@/constants/routes';
-import { withApi } from '@/helpers/getServerSideProps/withApi';
+import { INTERNAL_LOCATION_CREATE_ROUTE, INTERNAL_LOCATIONS_ROUTE } from '@/constants/routes';
+import { withAuth } from '@/helpers/getServerSideProps/withAuth';
 
-export const getServerSideProps = withApi<Record<string, never>>(async (context, { baseUrl }) => {
-  const response = await fetch(`${baseUrl}/accounts/me`, {
-    headers: { cookie: context.req.headers.cookie ?? '' },
-  });
-
-  if (response.status === 401) {
-    return {
-      redirect: {
-        destination: `${INTERNAL_LOGIN_ROUTE}?redirect=${encodeURIComponent(INTERNAL_LOCATIONS_ROUTE)}`,
-        permanent: false,
-      },
-    };
-  }
-
-  if (!response.ok) {
-    throw new Error(`Failed to load account (${response.status})`);
-  }
-
-  return { props: {} };
-});
+export const getServerSideProps = withAuth(INTERNAL_LOCATIONS_ROUTE);
 
 const PAGE_SIZE = 30;
 

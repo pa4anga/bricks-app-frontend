@@ -13,6 +13,7 @@ const devAllowedOrigins = (process.env.DEV_ALLOWED_ORIGINS ?? '')
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  poweredByHeader: false,
   // Allow SCSS modules to `@use 'variables' as *;` without deep relative paths.
   sassOptions: {
     includePaths: [path.join(__dirname, 'src/styles')],

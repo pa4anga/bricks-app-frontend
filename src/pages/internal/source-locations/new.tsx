@@ -10,34 +10,11 @@ import { z } from 'zod';
 import { usePostSourceLocations } from '@/api/endpoints/source-locations/source-locations';
 import { PageTemplate } from '@/components';
 import { Button, FormSection, ValidatedTextField } from '@/components/form';
-import {
-  INTERNAL_LOGIN_ROUTE,
-  INTERNAL_SOURCE_LOCATION_CREATE_ROUTE,
-  INTERNAL_SOURCE_LOCATIONS_ROUTE,
-} from '@/constants/routes';
+import { INTERNAL_SOURCE_LOCATION_CREATE_ROUTE, INTERNAL_SOURCE_LOCATIONS_ROUTE } from '@/constants/routes';
 import { getConflictField, isConflictError } from '@/helpers/apiErrors';
-import { withApi } from '@/helpers/getServerSideProps/withApi';
+import { withAuth } from '@/helpers/getServerSideProps/withAuth';
 
-export const getServerSideProps = withApi<Record<string, never>>(async (context, { baseUrl }) => {
-  const response = await fetch(`${baseUrl}/accounts/me`, {
-    headers: { cookie: context.req.headers.cookie ?? '' },
-  });
-
-  if (response.status === 401) {
-    return {
-      redirect: {
-        destination: `${INTERNAL_LOGIN_ROUTE}?redirect=${encodeURIComponent(INTERNAL_SOURCE_LOCATION_CREATE_ROUTE)}`,
-        permanent: false,
-      },
-    };
-  }
-
-  if (!response.ok) {
-    throw new Error(`Failed to load account (${response.status})`);
-  }
-
-  return { props: {} };
-});
+export const getServerSideProps = withAuth(INTERNAL_SOURCE_LOCATION_CREATE_ROUTE);
 
 const CAPACITY_REQUIREMENTS = 'Капацитетът трябва да е цяло число, поне 1.';
 

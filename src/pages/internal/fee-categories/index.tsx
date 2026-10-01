@@ -7,33 +7,10 @@ import Link from 'next/link';
 
 import { useGetFeeCategories } from '@/api/endpoints/fee-categories/fee-categories';
 import { FeeCategoriesTable, PageTemplate } from '@/components';
-import {
-  INTERNAL_FEE_CATEGORIES_ROUTE,
-  INTERNAL_FEE_CATEGORY_CREATE_ROUTE,
-  INTERNAL_LOGIN_ROUTE,
-} from '@/constants/routes';
-import { withApi } from '@/helpers/getServerSideProps/withApi';
+import { INTERNAL_FEE_CATEGORIES_ROUTE, INTERNAL_FEE_CATEGORY_CREATE_ROUTE } from '@/constants/routes';
+import { withAuth } from '@/helpers/getServerSideProps/withAuth';
 
-export const getServerSideProps = withApi<Record<string, never>>(async (context, { baseUrl }) => {
-  const response = await fetch(`${baseUrl}/accounts/me`, {
-    headers: { cookie: context.req.headers.cookie ?? '' },
-  });
-
-  if (response.status === 401) {
-    return {
-      redirect: {
-        destination: `${INTERNAL_LOGIN_ROUTE}?redirect=${encodeURIComponent(INTERNAL_FEE_CATEGORIES_ROUTE)}`,
-        permanent: false,
-      },
-    };
-  }
-
-  if (!response.ok) {
-    throw new Error(`Failed to load account (${response.status})`);
-  }
-
-  return { props: {} };
-});
+export const getServerSideProps = withAuth(INTERNAL_FEE_CATEGORIES_ROUTE);
 
 const FeeCategoriesPage: NextPage = () => {
   const { data: feeCategories, error, isLoading, mutate } = useGetFeeCategories();

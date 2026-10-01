@@ -6,33 +6,13 @@ import type { InferGetServerSidePropsType, NextPage } from 'next';
 import Link from 'next/link';
 
 import { useGetAccounts } from '@/api/endpoints/accounts/accounts';
-import type { UsernameResponse } from '@/api/model';
 import { AccountsTable, PageTemplate } from '@/components';
-import { INTERNAL_ACCOUNT_CREATE_ROUTE, INTERNAL_ACCOUNTS_ROUTE, INTERNAL_LOGIN_ROUTE } from '@/constants/routes';
-import { withApi } from '@/helpers/getServerSideProps/withApi';
+import { INTERNAL_ACCOUNT_CREATE_ROUTE, INTERNAL_ACCOUNTS_ROUTE } from '@/constants/routes';
+import { withAuth } from '@/helpers/getServerSideProps/withAuth';
 
-export const getServerSideProps = withApi<{ username: string }>(async (context, { baseUrl }) => {
-  const response = await fetch(`${baseUrl}/accounts/me`, {
-    headers: { cookie: context.req.headers.cookie ?? '' },
-  });
-
-  if (response.status === 401) {
-    return {
-      redirect: {
-        destination: `${INTERNAL_LOGIN_ROUTE}?redirect=${encodeURIComponent(INTERNAL_ACCOUNTS_ROUTE)}`,
-        permanent: false,
-      },
-    };
-  }
-
-  if (!response.ok) {
-    throw new Error(`Failed to load account (${response.status})`);
-  }
-
-  const { username } = (await response.json()) as UsernameResponse;
-
-  return { props: { username } };
-});
+export const getServerSideProps = withAuth(INTERNAL_ACCOUNTS_ROUTE, (_context, { username }) => ({
+  props: { username },
+}));
 
 const AccountsPage: NextPage<InferGetServerSidePropsType<typeof getServerSideProps>> = ({ username }) => {
   const { data: accounts, error, isLoading, mutate } = useGetAccounts();

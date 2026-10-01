@@ -15,34 +15,12 @@ import {
 import type { SourceLocation } from '@/api/model';
 import { PageTemplate } from '@/components';
 import { Button, FormSection, ValidatedTextField } from '@/components/form';
-import {
-  INTERNAL_LOGIN_ROUTE,
-  INTERNAL_SOURCE_LOCATION_EDIT_ROUTE,
-  INTERNAL_SOURCE_LOCATIONS_ROUTE,
-} from '@/constants/routes';
-import { withApi } from '@/helpers/getServerSideProps/withApi';
+import { INTERNAL_SOURCE_LOCATION_EDIT_ROUTE, INTERNAL_SOURCE_LOCATIONS_ROUTE } from '@/constants/routes';
+import { withAuth } from '@/helpers/getServerSideProps/withAuth';
 
-export const getServerSideProps = withApi<Record<string, never>>(async (context, { baseUrl }) => {
-  const name = typeof context.params?.name === 'string' ? context.params.name : '';
-  const response = await fetch(`${baseUrl}/accounts/me`, {
-    headers: { cookie: context.req.headers.cookie ?? '' },
-  });
-
-  if (response.status === 401) {
-    return {
-      redirect: {
-        destination: `${INTERNAL_LOGIN_ROUTE}?redirect=${encodeURIComponent(INTERNAL_SOURCE_LOCATION_EDIT_ROUTE(name))}`,
-        permanent: false,
-      },
-    };
-  }
-
-  if (!response.ok) {
-    throw new Error(`Failed to load account (${response.status})`);
-  }
-
-  return { props: {} };
-});
+export const getServerSideProps = withAuth(context =>
+  INTERNAL_SOURCE_LOCATION_EDIT_ROUTE(typeof context.params?.name === 'string' ? context.params.name : '')
+);
 
 const CAPACITY_REQUIREMENTS = 'Капацитетът трябва да е цяло число, поне 1.';
 

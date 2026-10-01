@@ -7,33 +7,10 @@ import Link from 'next/link';
 
 import { useGetSourceLocations } from '@/api/endpoints/source-locations/source-locations';
 import { PageTemplate, SourceLocationsTable } from '@/components';
-import {
-  INTERNAL_LOGIN_ROUTE,
-  INTERNAL_SOURCE_LOCATION_CREATE_ROUTE,
-  INTERNAL_SOURCE_LOCATIONS_ROUTE,
-} from '@/constants/routes';
-import { withApi } from '@/helpers/getServerSideProps/withApi';
+import { INTERNAL_SOURCE_LOCATION_CREATE_ROUTE, INTERNAL_SOURCE_LOCATIONS_ROUTE } from '@/constants/routes';
+import { withAuth } from '@/helpers/getServerSideProps/withAuth';
 
-export const getServerSideProps = withApi<Record<string, never>>(async (context, { baseUrl }) => {
-  const response = await fetch(`${baseUrl}/accounts/me`, {
-    headers: { cookie: context.req.headers.cookie ?? '' },
-  });
-
-  if (response.status === 401) {
-    return {
-      redirect: {
-        destination: `${INTERNAL_LOGIN_ROUTE}?redirect=${encodeURIComponent(INTERNAL_SOURCE_LOCATIONS_ROUTE)}`,
-        permanent: false,
-      },
-    };
-  }
-
-  if (!response.ok) {
-    throw new Error(`Failed to load account (${response.status})`);
-  }
-
-  return { props: {} };
-});
+export const getServerSideProps = withAuth(INTERNAL_SOURCE_LOCATIONS_ROUTE);
 
 const SourceLocationsPage: NextPage = () => {
   const { data: sourceLocations, error, isLoading, mutate } = useGetSourceLocations();

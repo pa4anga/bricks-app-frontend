@@ -12,34 +12,12 @@ import { useGetFeeCategoriesName, usePatchFeeCategoriesName } from '@/api/endpoi
 import type { FeeCategory } from '@/api/model';
 import { PageTemplate } from '@/components';
 import { Button, FormSection, ValidatedTextField } from '@/components/form';
-import {
-  INTERNAL_FEE_CATEGORIES_ROUTE,
-  INTERNAL_FEE_CATEGORY_EDIT_ROUTE,
-  INTERNAL_LOGIN_ROUTE,
-} from '@/constants/routes';
-import { withApi } from '@/helpers/getServerSideProps/withApi';
+import { INTERNAL_FEE_CATEGORIES_ROUTE, INTERNAL_FEE_CATEGORY_EDIT_ROUTE } from '@/constants/routes';
+import { withAuth } from '@/helpers/getServerSideProps/withAuth';
 
-export const getServerSideProps = withApi<Record<string, never>>(async (context, { baseUrl }) => {
-  const name = typeof context.params?.name === 'string' ? context.params.name : '';
-  const response = await fetch(`${baseUrl}/accounts/me`, {
-    headers: { cookie: context.req.headers.cookie ?? '' },
-  });
-
-  if (response.status === 401) {
-    return {
-      redirect: {
-        destination: `${INTERNAL_LOGIN_ROUTE}?redirect=${encodeURIComponent(INTERNAL_FEE_CATEGORY_EDIT_ROUTE(name))}`,
-        permanent: false,
-      },
-    };
-  }
-
-  if (!response.ok) {
-    throw new Error(`Failed to load account (${response.status})`);
-  }
-
-  return { props: {} };
-});
+export const getServerSideProps = withAuth(context =>
+  INTERNAL_FEE_CATEGORY_EDIT_ROUTE(typeof context.params?.name === 'string' ? context.params.name : '')
+);
 
 const PERCENTAGE_REQUIREMENTS = 'Процентът трябва да е число, поне 0.';
 
